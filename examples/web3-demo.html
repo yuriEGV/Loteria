@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loteria Blockchain - Demo Web3</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .wallet-info {
+            background: #f7f7f7;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .wallet-address {
+            font-family: monospace;
+            color: #764ba2;
+            font-weight: bold;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 5px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .group-card {
+            border: 2px solid #667eea;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 10px 0;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .log {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🎰 Loteria Blockchain</h1>
+            <p>Demo de integración Web3 con MetaMask</p>
+            
+            <div id="walletSection">
+                <button onclick="connectWallet()">🦊 Conectar MetaMask</button>
+            </div>
+            
+            <div id="walletInfo" style="display: none;" class="wallet-info">
+                <p><strong>Wallet Conectada:</strong></p>
+                <p class="wallet-address" id="walletAddress"></p>
+                <p><strong>Balance:</strong> <span id="balance"></span> ETH</p>
+                <p><strong>Red:</strong> <span id="network"></span></p>
+            </div>
+        </div>
+        
+        <div class="card" id="groupsSection" style="display: none;">
+            <h2>📋 Grupos Disponibles</h2>
+            
+            <div class="group-card">
+                <h3>💚 Grupo BASICO</h3>
+                <p>10 personas × $10,000 CLP</p>
+                <p><strong>Depósito:</strong> 0.01 ETH</p>
+                <p><strong>Premio Neto:</strong> $95,500 CLP</p>
+                <button onclick="joinGroup('BASICO', '0.01')">Unirse al Grupo</button>
+            </div>
+            
+            <div class="group-card">
+                <h3>💙 Grupo ESTANDAR</h3>
+                <p>15 personas × $25,000 CLP</p>
+                <p><strong>Depósito:</strong> 0.025 ETH</p>
+                <p><strong>Premio Neto:</strong> $356,875 CLP</p>
+                <button onclick="joinGroup('ESTANDAR', '0.025')">Unirse al Grupo</button>
+            </div>
+            
+            <div class="group-card">
+                <h3>💜 Grupo PREMIUM</h3>
+                <p>8 personas × $100,000 CLP</p>
+                <p><strong>Depósito:</strong> 0.1 ETH</p>
+                <p><strong>Premio Neto:</strong> $754,000 CLP</p>
+                <button onclick="joinGroup('PREMIUM', '0.1')">Unirse al Grupo</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📊 Estado</h2>
+            <div id="status"></div>
+        </div>
+        
+        <div class="card">
+            <h2>📝 Logs</h2>
+            <div id="logs" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+        const CONTRACT_ADDRESS = '0x1234567890123456789012345678901234567890'; // Cambiar por tu contrato
+        
+        const LOTTERY_ABI = [
+            "function deposit() external payable",
+            "function getBalance() external view returns (uint256)",
+            "function monthlyAmount() external view returns (uint256)"
+        ];
+        
+        let provider;
+        let signer;
+        let walletAddress;
+        let authToken;
+        
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${timestamp}] ${message}`;
+            logsDiv.appendChild(entry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+        
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        async function connectWallet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    showStatus('❌ Por favor instala MetaMask', 'error');
+                    return;
+                }
+                
+                log('Conectando con MetaMask...');
+                showStatus('🔄 Conectando wallet...', 'info');
+                
+                // Solicitar acceso
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                walletAddress = accounts[0];
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+                
+                // Obtener balance
+                const balance = await provider.getBalance(walletAddress);
+                const balanceInEth = ethers.utils.formatEther(balance);
+                
+                // Obtener red
+                const network = await provider.getNetwork();
+                
+                // Actualizar UI
+                document.getElementById('walletAddress').textContent = walletAddress;
+                document.getElementById('balance').textContent = parseFloat(balanceInEth).toFixed(4);
+                document.getElementById('network').textContent = network.name;
+                document.getElementById('walletInfo').style.display = 'block';
+                document.getElementById('groupsSection').style.display = 'block';
+                
+                log(`✅ Wallet conectada: ${walletAddress}`);
+                showStatus('✅ Wallet conectada exitosamente', 'success');
+                
+                // Login en API
+                await loginToAPI();
+                
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                showStatus('❌ Error conectando wallet: ' + error.message, 'error');
+            }
+        }
+        
+        async function loginToAPI() {
+            try {
+                log('Autenticando en API...');
+                
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ walletAddress })
+                });
+                
+                const data = await response.json();
+                authToken = data.token;
+                
+                log('✅ Autenticación exitosa');
+                showStatus('✅ Autenticado en la plataforma', 'success');
+                
+            } catch (error) {
+                log(`❌ Error en login: ${error.message}`);
+                showStatus('❌ Error en autenticación', 'error');
+            }
+        }
+        
+        async function joinGroup(groupType, amountEth) {
+            try {
+                showStatus('🔄 Procesando...', 'info');
+                log(`Iniciando proceso para unirse al grupo ${groupType}...`);
+                
+                // 1. Crear grupo en API
+                log('Creando grupo...');
+                const createResponse = await fetch(`${API_URL}/api/groups`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        type: groupType,
+                        contractAddress: CONTRACT_ADDRESS
+                    })
+                });
+                
+                const groupData = await createResponse.json();
+                const groupId = groupData.group._id;
+                log(`✅ Grupo creado: ${groupId}`);
+                
+                // 2. Hacer depósito blockchain
+                log(`Depositando ${amountEth} ETH...`);
+                showStatus(`💰 Depositando ${amountEth} ETH...`, 'info');
+                
+                const contract = new ethers.Contract(CONTRACT_ADDRESS, LOTTERY_ABI, signer);
+                
+                const tx = await contract.deposit({
+                    value: ethers.utils.parseEther(amountEth)
+                });
+                
+                log(`📤 Transacción enviada: ${tx.hash}`);
+                showStatus('⏳ Esperando confirmación...', 'info');
+                
+                const receipt = await tx.wait();
+                log(`✅ Transacción confirmada en bloque ${receipt.blockNumber}`);
+                
+                // 3. Registrar en API
+                log('Registrando en grupo...');
+                const joinResponse = await fetch(`${API_URL}/api/groups/join/${groupId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        txHash: receipt.transactionHash
+                    })
+                });
+                
+                const result = await joinResponse.json();
+                
+                if (result.success) {
+                    log(`🎉 ¡Te uniste exitosamente! Posición: ${result.position}`);
+                    showStatus(`✅ ¡Éxito! Te uniste al grupo ${groupType}. Posición: ${result.position}`, 'success');
+                } else {
+                    throw new Error(result.message);
+                }
+                
+            } catch (error) {
+                log(`❌ Error: ${error.message}`);
+                showStatus('❌ Error: ' + error.message, 'error');
+            }
+        }
+        
+        // Escuchar cambios de cuenta
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    log('Wallet desconectada');
+                    location.reload();
+                } else {
+                    log('Cuenta cambiada, recargando...');
+                    location.reload();
+                }
+            });
+            
+            window.ethereum.on('chainChanged', () => {
+                log('Red cambiada, recargando...');
+                location.reload();
+            });
+        }
+    </script>
+</body>
+</html>
