@@ -3,6 +3,10 @@ const User = require('../models/User');
 const Deposit = require('../models/Deposit');
 const { calculateFairWinner } = require('../utils/lotteryAlgorithm');
 const { transferPrize, getContractBalance } = require('../utils/blockchainVerifier');
+const { calculateCommission } = require('../utils/commissionCalculator');
+
+// Platform wallet address for receiving commissions
+const PLATFORM_WALLET = process.env.PLATFORM_WALLET || '0x742d35Cc6634C0532925a3b8D7c7aC5329E8A5D5';
 
 // @desc    Run monthly lottery for a group
 // @route   POST /api/lottery/run/:groupId
@@ -33,19 +37,17 @@ const runMonthlyLottery = async (req, res) => {
             return res.status(500).json({ message: 'Could not determine winner' });
         }
 
-        // 2. Transfer prize via smart contract
+        // 2. Calculate commission and net prize
+        const commissionData = calculateCommission(group.groupType, group.prizeAmount);
+        const netPrize = commissionData.netPrize;
+        const commission = commissionData.totalCommission;
+
+        // 3. Transfer net prize to winner via smart contract
         const transferResult = await transferPrize(
             group.blockchainContract,
             winner.user.walletAddress,
             group.currentRound
         );
-
-        if (!transferResult.success) {
-            return res.status(500).json({
-                message: 'Prize transfer failed',
-                error: transferResult.error
-            });
-        }
 
         // 3. Update group state
         const participantIndex = group.participants.findIndex(
@@ -70,6 +72,7 @@ const runMonthlyLottery = async (req, res) => {
             $inc: { totalMonths: 1 }
         });
 
+
         res.json({
             success: true,
             winner: {
@@ -77,7 +80,14 @@ const runMonthlyLottery = async (req, res) => {
                 name: winner.user.name,
                 email: winner.user.email
             },
-            prizeAmount: group.prizeAmount,
+            grossPrize: group.prizeAmount,
+            commission: {
+                total: commission,
+                percentage: commissionData.commissionRate,
+                fixedCost: commissionData.fixedCost,
+                description: commissionData.description
+            },
+            netPrize: netPrize,
             round: group.currentRound - 1,
             txHash: transferResult.txHash,
             blockNumber: transferResult.blockNumber

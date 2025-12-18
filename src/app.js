@@ -25,6 +25,7 @@ app.use(morgan('dev'));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/groups', require('./routes/groups'));
 app.use('/api/lottery', require('./routes/lottery'));
+app.use('/api/commission', require('./routes/commission'));
 
 // Root route
 app.get('/', (req, res) => {

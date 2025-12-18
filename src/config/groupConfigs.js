@@ -8,7 +8,13 @@ const GROUP_CONFIGS = {
         maxParticipants: 10,
         monthlyAmount: 10000, // CLP
         prizeAmount: 100000,  // 10 * 10,000
-        recoveryMonths: 10
+        recoveryMonths: 10,
+        commission: {
+            percentage: 0.025,
+            fixedCost: 2000,
+            total: 4500,
+            netPrize: 95500
+        }
     },
     ESTANDAR: {
         name: 'Estándar',
@@ -16,7 +22,13 @@ const GROUP_CONFIGS = {
         maxParticipants: 15,
         monthlyAmount: 25000, // CLP
         prizeAmount: 375000,  // 15 * 25,000
-        recoveryMonths: 15
+        recoveryMonths: 15,
+        commission: {
+            percentage: 0.035,
+            fixedCost: 5000,
+            total: 18125,
+            netPrize: 356875
+        }
     },
     PREMIUM: {
         name: 'Premium',
@@ -24,7 +36,13 @@ const GROUP_CONFIGS = {
         maxParticipants: 8,
         monthlyAmount: 100000, // CLP
         prizeAmount: 800000,   // 8 * 100,000
-        recoveryMonths: 8
+        recoveryMonths: 8,
+        commission: {
+            percentage: 0.045,
+            fixedCost: 10000,
+            total: 46000,
+            netPrize: 754000
+        }
     }
 };
 

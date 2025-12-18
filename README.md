@@ -21,9 +21,16 @@ npm start
 
 ## 📋 Grupos Disponibles
 
-- **BASICO**: 10 personas × $10,000 CLP = $100,000 premio
-- **ESTANDAR**: 15 personas × $25,000 CLP = $375,000 premio  
-- **PREMIUM**: 8 personas × $100,000 CLP = $800,000 premio
+| Grupo | Participantes | Depósito Mensual | Premio Bruto | Comisión | Premio Neto |
+|-------|--------------|------------------|--------------|----------|-------------|
+| **BASICO** | 10 | $10,000 CLP | $100,000 | $4,500 (2.5%+$2k) | $95,500 |
+| **ESTANDAR** | 15 | $25,000 CLP | $375,000 | $18,125 (3.5%+$5k) | $356,875 |
+| **PREMIUM** | 8 | $100,000 CLP | $800,000 | $46,000 (4.5%+$10k) | $754,000 |
+
+### Sistema de Comisiones
+- **Fórmula**: Comisión = (Premio × % Base) + Costo Fijo Operativo
+- **Cubre**: Gas blockchain + Infraestructura + Soporte
+- **Transparente**: Desglose completo en cada sorteo
 
 ## 🔗 API Endpoints
 
@@ -39,6 +46,10 @@ npm start
 - `GET /api/lottery/groups` - Grupos activos
 - `GET /api/lottery/status/:id` - Estado del sorteo
 - `POST /api/lottery/run/:id` - Ejecutar sorteo mensual
+
+### Comisiones
+- `GET /api/commission/distribution/:id` - Desglose de premio
+- `GET /api/commission/rates` - Tarifas de comisión
 
 ## 📦 Deployment en Vercel
 
