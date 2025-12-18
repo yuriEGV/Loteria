@@ -80,4 +80,8 @@ const getCommissionRates = async (req, res) => {
     }
 };
 
-module.exports = { getPrizeDistribution, getCommissionRates };
+// Register routes
+router.get('/distribution/:groupId', getPrizeDistribution);
+router.get('/rates', getCommissionRates);
+
+module.exports = router;

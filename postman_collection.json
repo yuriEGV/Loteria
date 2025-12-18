@@ -1,0 +1,410 @@
+{
+    "info": {
+        "_postman_id": "loteria-blockchain-api",
+        "name": "Loteria Blockchain API",
+        "description": "Colección completa para probar la API de Lotería Blockchain con Web3",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:5000",
+            "type": "string"
+        },
+        {
+            "key": "token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "walletAddress",
+            "value": "0x742d35Cc6634C0532925a3b8D7c7aC5329E8A5D5",
+            "type": "string"
+        },
+        {
+            "key": "groupId",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "txHash",
+            "value": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "Login with Wallet",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.collectionVariables.set('token', response.token);",
+                                    "    pm.collectionVariables.set('walletAddress', response.walletAddress);",
+                                    "    console.log('Token saved:', response.token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"walletAddress\": \"{{walletAddress}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Login con dirección de wallet. Crea usuario si no existe."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Groups",
+            "item": [
+                {
+                    "name": "Create Group - BASICO",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.collectionVariables.set('groupId', response.group._id);",
+                                    "    console.log('Group ID saved:', response.group._id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"type\": \"BASICO\",\n    \"contractAddress\": \"0x1234567890123456789012345678901234567890\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/groups",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "groups"
+                            ]
+                        },
+                        "description": "Crear grupo BASICO (10 personas × $10,000 = $100,000)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Group - ESTANDAR",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"type\": \"ESTANDAR\",\n    \"contractAddress\": \"0x1234567890123456789012345678901234567890\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/groups",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "groups"
+                            ]
+                        },
+                        "description": "Crear grupo ESTANDAR (15 personas × $25,000 = $375,000)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Group - PREMIUM",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"type\": \"PREMIUM\",\n    \"contractAddress\": \"0x1234567890123456789012345678901234567890\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/groups",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "groups"
+                            ]
+                        },
+                        "description": "Crear grupo PREMIUM (8 personas × $100,000 = $800,000)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Group Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/groups/{{groupId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "groups",
+                                "{{groupId}}"
+                            ]
+                        },
+                        "description": "Obtener detalles de un grupo específico"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Join Group (Web3 Required)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"txHash\": \"{{txHash}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/groups/join/{{groupId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "groups",
+                                "join",
+                                "{{groupId}}"
+                            ]
+                        },
+                        "description": "Unirse a un grupo. Requiere txHash de depósito blockchain real."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Lottery",
+            "item": [
+                {
+                    "name": "Get Active Groups",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/lottery/groups",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "lottery",
+                                "groups"
+                            ]
+                        },
+                        "description": "Obtener todos los grupos activos"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Lottery Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/lottery/status/{{groupId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "lottery",
+                                "status",
+                                "{{groupId}}"
+                            ]
+                        },
+                        "description": "Ver estado del sorteo de un grupo"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Run Monthly Lottery (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/lottery/run/{{groupId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "lottery",
+                                "run",
+                                "{{groupId}}"
+                            ]
+                        },
+                        "description": "Ejecutar sorteo mensual (requiere autenticación)"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Commission",
+            "item": [
+                {
+                    "name": "Get Prize Distribution",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/commission/distribution/{{groupId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "commission",
+                                "distribution",
+                                "{{groupId}}"
+                            ]
+                        },
+                        "description": "Ver desglose completo de premio con comisiones"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Commission Rates",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/commission/rates",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "commission",
+                                "rates"
+                            ]
+                        },
+                        "description": "Ver tarifas de comisión para todos los grupos"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Web3 Testing",
+            "item": [
+                {
+                    "name": "Test - Simulate Blockchain Deposit",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"note\": \"Este es un ejemplo de cómo simular un depósito blockchain\",\n    \"steps\": [\n        \"1. Conectar MetaMask a tu DApp\",\n        \"2. Llamar contract.deposit() con el monto correcto\",\n        \"3. Esperar confirmación de transacción\",\n        \"4. Obtener txHash del receipt\",\n        \"5. Usar txHash en el endpoint /api/groups/join/:groupId\"\n    ],\n    \"exampleCode\": \"const tx = await contract.deposit({ value: ethers.parseEther('0.01') }); const receipt = await tx.wait(); const txHash = receipt.hash;\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/groups/join/{{groupId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "groups",
+                                "join",
+                                "{{groupId}}"
+                            ]
+                        },
+                        "description": "Documentación de cómo simular depósito blockchain"
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ]
+}
